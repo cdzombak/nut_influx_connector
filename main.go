@@ -55,6 +55,7 @@ func main() {
 	var influxUser = flag.String("influx-username", "", "InfluxDB username.")
 	var influxPass = flag.String("influx-password", "", "InfluxDB password.")
 	var influxBucket = flag.String("influx-bucket", "", "InfluxDB bucket. Supply a string in the form 'database/retention-policy'. For the default retention policy, pass just a database name (without the slash character). Required.")
+	var measurementName = flag.String("measurement-name", "ups_stats", "InfluxDB measurement name.")
 	var upsNameTag = flag.String("ups-nametag", "", "Value for the ups_name tag in InfluxDB. Required.")
 	var ups = flag.String("ups", "", "UPS to read status from, format 'upsname[@hostname[:port]]'. Required.")
 	var pollInterval = flag.Int("poll-interval", 30, "Polling interval, in seconds.")
@@ -146,7 +147,7 @@ func main() {
 		}
 
 		point := influxdb2.NewPoint(
-			"ups_power_output",
+			*measurementName,
 			map[string]string{"ups_name": *upsNameTag}, // tags
 			map[string]interface{}{ // fields
 				"watts":                      watts,
