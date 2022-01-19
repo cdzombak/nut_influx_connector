@@ -120,7 +120,7 @@ func main() {
 			log.Printf(err.Error())
 			return
 		}
-		battVNominal, err := readNutInt(*ups, "battery.voltage.nominal")
+		battVNominal, err := readNutFloat(*ups, "battery.voltage.nominal")
 		if err != nil {
 			log.Printf(err.Error())
 			return
@@ -130,7 +130,7 @@ func main() {
 			log.Printf(err.Error())
 			return
 		}
-		inputVNominal, err := readNutInt(*ups, "input.voltage.nominal")
+		inputVNominal, err := readNutFloat(*ups, "input.voltage.nominal")
 		if err != nil {
 			log.Printf(err.Error())
 			return
