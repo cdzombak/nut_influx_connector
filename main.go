@@ -138,7 +138,6 @@ func main() {
 		outputV, err := readNutFloat(*ups, "output.voltage")
 		if err != nil {
 			log.Printf(err.Error())
-			return
 		}
 
 		watts := math.Round(float64(nominalPower) * float64(load) / 100.0)
