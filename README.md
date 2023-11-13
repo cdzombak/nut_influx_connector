@@ -31,16 +31,16 @@ nut_influx_connector \
 ## Options
 
 * `-heartbeat-url string`: URL to GET every 60s, URL to GET every 60s, if and only if the program has successfully sent NUT statistics to Influx in the past 120s.
-- `influx-bucket string`: InfluxDB bucket. Supply a string in the form `database/retention-policy`. For the default retention policy, pass just a database name (without the slash character). Required.
-- `influx-password string`: InfluxDB password.
-- `influx-server string`: InfluxDB server, including protocol and port, e.g. `http://192.168.1.4:8086`. Required.
-- `influx-timeout int`: Timeout for writing to InfluxDB, in seconds. (default `3`)
-- `influx-username string`: InfluxDB username.
-- `measurement-name string`: InfluxDB measurement name. (default `ups_stats`)
-- `poll-interval int`: Polling interval, in seconds. (default `30`)
-- `print-usage`: Log energy usage (in watts) to standard error.
-- `ups string`: UPS to read status from, format `upsname[@hostname[:port]]`. Required.
-- `ups-nametag string`: Value for the `ups_name` tag in InfluxDB. Required.
+- `-influx-bucket string`: InfluxDB bucket. Supply a string in the form `database/retention-policy`. For the default retention policy, pass just a database name (without the slash character). Required.
+- `-influx-password string`: InfluxDB password.
+- `-influx-server string`: InfluxDB server, including protocol and port, e.g. `http://192.168.1.4:8086`. Required.
+- `-influx-timeout int`: Timeout for writing to InfluxDB, in seconds. (default `3`)
+- `-influx-username string`: InfluxDB username.
+- `-measurement-name string`: InfluxDB measurement name. (default `ups_stats`)
+- `-poll-interval int`: Polling interval, in seconds. (default `30`)
+- `-print-usage`: Log energy usage (in watts) to standard error.
+- `-ups string`: UPS to read status from, format `upsname[@hostname[:port]]`. Required.
+- `-ups-nametag string`: Value for the `ups_name` tag in InfluxDB. Required.
 - `-help`: Print help and exit.
 - `-version`: Print version and exit.
 
