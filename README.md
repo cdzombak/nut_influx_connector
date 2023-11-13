@@ -85,7 +85,7 @@ make build
 cp out/nut_influx_connector $INSTALL_DIR
 ```
 
-## Running with Systemd
+## Running on Linux with Systemd
 
 After installing the binary, you can run it as a systemd service.
 
@@ -105,6 +105,19 @@ sudo systemctl start nut-influx-connector
 ```shell
 sudo systemctl status nut-influx-connector
 sudo journalctl -f -u nut-influx-connector.service
+```
+
+## Running on macOS with Launchd
+
+> **Note**
+> This is untested; please open an issue if it doesn't work as expected.
+
+After installing the binary via Homebrew, you can run it as a launchd service.
+- Install the launchd plist `com.dzombak.nut-influx-connector.plist` and customize that file as desired (e.g. with the correct CLI options for your deployment):
+```shell
+mkdir -p "$HOME"/Library/LaunchAgents
+curl -sSL https://raw.githubusercontent.com/cdzombak/nut_influx_connector/main/com.dzombak.nut-influx-connector.plist > "$HOME"/Library/LaunchAgents/com.dzombak.nut-influx-connector.plist
+nano "$HOME"/Library/LaunchAgents/com.dzombak.nut-influx-connector.plist
 ```
 
 ## License
