@@ -63,6 +63,7 @@ func main() {
 	var pollInterval = flag.Int("poll-interval", 30, "Polling interval, in seconds.")
 	var printUsage = flag.Bool("print-usage", false, "Log energy usage (in watts) to standard error.")
 	var influxTimeoutS = flag.Int("influx-timeout", 3, "Timeout for writing to InfluxDB, in seconds.")
+	var heartbeatURL = flag.String("heartbeat-url", "", "URL to GET every 60s, if and only if the program has successfully sent NUT statistics to Influx in the past 120s.")
 	var printVersion = flag.Bool("version", false, "Print version and exit.")
 	flag.Parse()
 
@@ -78,6 +79,22 @@ func main() {
 	if *upsNameTag == "" || *ups == "" {
 		fmt.Println("-ups and -ups-nametag must be supplied.")
 		os.Exit(1)
+	}
+
+	var hb Heartbeat
+	var err error
+	if *heartbeatURL != "" {
+		hb, err = NewHeartbeat(&HeartbeatConfig{
+			HeartbeatInterval: 60 * time.Second,
+			LivenessThreshold: 120 * time.Second,
+			HeartbeatURL:      *heartbeatURL,
+			OnError: func(err error) {
+				log.Printf("heartbeat error: %s\n", err)
+			},
+		})
+		if err != nil {
+			log.Fatalf("failed to create heartbeat client: %v", err)
+		}
 	}
 
 	influxTimeout := time.Duration(*influxTimeoutS) * time.Second
@@ -181,9 +198,12 @@ func main() {
 			retry.Attempts(2),
 		); err != nil {
 			log.Printf("failed to write point to influx: %v", err)
+		} else if hb != nil {
+			hb.Alive(atTime)
 		}
 	}
 
+	hb.Start()
 	doUpdate()
 	for range time.Tick(time.Duration(*pollInterval) * time.Second) {
 		doUpdate()

@@ -30,6 +30,7 @@ nut_influx_connector \
 
 ## Options
 
+* `-heartbeat-url string`: URL to GET every 60s, URL to GET every 60s, if and only if the program has successfully sent NUT statistics to Influx in the past 120s.
 - `influx-bucket string`: InfluxDB bucket. Supply a string in the form `database/retention-policy`. For the default retention policy, pass just a database name (without the slash character). Required.
 - `influx-password string`: InfluxDB password.
 - `influx-server string`: InfluxDB server, including protocol and port, e.g. `http://192.168.1.4:8086`. Required.
