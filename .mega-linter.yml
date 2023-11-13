@@ -1,0 +1,21 @@
+# https://megalinter.io/configuration/
+---
+VALIDATE_ALL_CODEBASE: true
+
+DISABLE:
+  - COPYPASTE
+  - SPELL
+DISABLE_LINTERS:
+  - MAKEFILE_CHECKMAKE
+  - REPOSITORY_DEVSKIM
+  - REPOSITORY_KICS
+  - REPOSITORY_TRIVY
+
+PLUGINS:
+  - https://raw.githubusercontent.com/cdzombak/mega-linter-plugin-dockerfilelint/main/mega-linter-plugin-dockerfilelint/dockerfilelint.megalinter-descriptor.yml
+
+GO_REVIVE_CONFIG_FILE: ".revive.toml"
+
+SHOW_ELAPSED_TIME: false
+FILEIO_REPORTER: false
+PRINT_ALPACA: false

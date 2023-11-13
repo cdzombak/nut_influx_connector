@@ -16,6 +16,8 @@ import (
 	"github.com/influxdata/influxdb-client-go/v2"
 )
 
+var version = "<dev>"
+
 func readNut(ups, key string) (string, error) {
 	nutCmd := exec.Command("upsc", ups, key)
 	nutOut, err := nutCmd.Output()
@@ -61,7 +63,14 @@ func main() {
 	var pollInterval = flag.Int("poll-interval", 30, "Polling interval, in seconds.")
 	var printUsage = flag.Bool("print-usage", false, "Log energy usage (in watts) to standard error.")
 	var influxTimeoutS = flag.Int("influx-timeout", 3, "Timeout for writing to InfluxDB, in seconds.")
+	var printVersion = flag.Bool("version", false, "Print version and exit.")
 	flag.Parse()
+
+	if *printVersion {
+		fmt.Println(version)
+		os.Exit(0)
+	}
+
 	if *influxServer == "" || *influxBucket == "" {
 		fmt.Println("-influx-bucket and -influx-server must be supplied.")
 		os.Exit(1)
@@ -86,64 +95,64 @@ func main() {
 	if health.Status != "pass" {
 		log.Fatalf("InfluxDB did not pass health check: status %s; message '%s'", health.Status, *health.Message)
 	}
-	influxWriteApi := influxClient.WriteAPIBlocking("", *influxBucket)
+	influxWriteAPI := influxClient.WriteAPIBlocking("", *influxBucket)
 
 	doUpdate := func() {
 		atTime := time.Now()
 
 		load, err := readNutInt(*ups, "ups.load")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 			return
 		}
 		nominalPower, err := readNutInt(*ups, "ups.realpower.nominal")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 			return
 		}
 		battCharge, err := readNutInt(*ups, "battery.charge")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 			return
 		}
 		battChargeLow, err := readNutInt(*ups, "battery.charge.low")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 			return
 		}
 		battRuntime, err := readNutInt(*ups, "battery.runtime")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 			return
 		}
 		battV, err := readNutFloat(*ups, "battery.voltage")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 			return
 		}
 		battVNominal, err := readNutFloat(*ups, "battery.voltage.nominal")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 			return
 		}
 		inputV, err := readNutFloat(*ups, "input.voltage")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 			return
 		}
 		inputVNominal, err := readNutFloat(*ups, "input.voltage.nominal")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 			return
 		}
 		outputV, err := readNutFloat(*ups, "output.voltage")
 		if err != nil {
-			log.Printf(err.Error())
+			log.Println(err.Error())
 		}
 
 		watts := math.Round(float64(nominalPower) * float64(load) / 100.0)
 		if *printUsage {
-			log.Printf("current approx. output for '%s': %.f watts", *ups, watts)
+			log.Printf("current approx. output for '%s': %.f watts\n", *ups, watts)
 		}
 
 		point := influxdb2.NewPoint(
@@ -167,7 +176,7 @@ func main() {
 			func() error {
 				ctx, cancel := context.WithTimeout(context.Background(), influxTimeout)
 				defer cancel()
-				return influxWriteApi.WritePoint(ctx, point)
+				return influxWriteAPI.WritePoint(ctx, point)
 			},
 			retry.Attempts(2),
 		); err != nil {
@@ -176,10 +185,7 @@ func main() {
 	}
 
 	doUpdate()
-	for {
-		select {
-		case <-time.Tick(time.Duration(*pollInterval) * time.Second):
-			doUpdate()
-		}
+	for range time.Tick(time.Duration(*pollInterval) * time.Second) {
+		doUpdate()
 	}
 }

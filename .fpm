@@ -1,0 +1,6 @@
+-s dir
+--name nut_influx_connector
+--description "Ship energy usage data and other UPS stats from Network-UPS-Tools to InfluxDB"
+--url "https://github.com/cdzombak/nut_influx_connector"
+--maintainer "Chris Dzombak <https://www.dzombak.com>"
+--license MIT

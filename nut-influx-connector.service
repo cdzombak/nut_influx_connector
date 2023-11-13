@@ -5,8 +5,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=cdzombak
-Group=cdzombak
+User=nut-influx-connector
+Group=nut-influx-connector
 ExecStart=/usr/local/bin/nut_influx_connector -influx-bucket "myhome" -influx-server "http://192.168.1.2:8086" -ups "ups" -ups-nametag "myups"
 Restart=always
 RestartSec=5
