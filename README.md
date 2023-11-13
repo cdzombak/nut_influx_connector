@@ -41,8 +41,8 @@ nut_influx_connector \
 - `print-usage`: Log energy usage (in watts) to standard error.
 - `ups string`: UPS to read status from, format `upsname[@hostname[:port]]`. Required.
 - `ups-nametag string`: Value for the `ups_name` tag in InfluxDB. Required.
--`-help`: Print help and exit.
--`-version`: Print version and exit.
+- `-help`: Print help and exit.
+- `-version`: Print version and exit.
 
 ## Installation
 
