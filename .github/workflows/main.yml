@@ -254,13 +254,13 @@ jobs:
 
   ntfy:
     name: Ntfy
-    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     needs: [meta, lint, binaries, release, aptly, homebrew]
+    if: ${{ !cancelled() && (needs.meta.outputs.is_release == 'true' || needs.meta.outputs.is_prerelease == 'true') }}
     steps:
       - name: Send success notification
         uses: niniyas/ntfy-action@master
-        if: ${{ !contains(needs.*.result, 'failure') && (needs.meta.outputs.is_release == 'true' || needs.meta.outputs.is_prerelease == 'true') }}
+        if: ${{ !contains(needs.*.result, 'failure') }}
         with:
           url: "https://ntfy.cdzombak.net"
           topic: "gha-builds"
