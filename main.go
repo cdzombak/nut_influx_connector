@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
+	"github.com/cdzombak/heartbeat"
 	"github.com/influxdata/influxdb-client-go/v2"
 )
 
@@ -81,10 +82,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	var hb Heartbeat
+	var hb heartbeat.Heartbeat
 	var err error
 	if *heartbeatURL != "" {
-		hb, err = NewHeartbeat(&HeartbeatConfig{
+		hb, err = heartbeat.NewHeartbeat(&heartbeat.Config{
 			HeartbeatInterval: 60 * time.Second,
 			LivenessThreshold: 120 * time.Second,
 			HeartbeatURL:      *heartbeatURL,
