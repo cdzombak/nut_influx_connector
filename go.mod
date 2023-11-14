@@ -1,6 +1,6 @@
 module nut_influx_connector
 
-go 1.21
+go 1.21.3
 
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
