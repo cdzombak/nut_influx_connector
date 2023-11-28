@@ -204,7 +204,9 @@ func main() {
 		}
 	}
 
-	hb.Start()
+	if hb != nil {
+		hb.Start()
+	}
 	doUpdate()
 	for range time.Tick(time.Duration(*pollInterval) * time.Second) {
 		doUpdate()
