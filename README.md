@@ -59,10 +59,10 @@ echo -e "deb [signed-by=/etc/apt/keyrings/dist-cdzombak-net.gpg] https://dist.cd
 sudo apt update
 ```
 
-Then install `nut_influx_connector` via `apt`:
+Then install `nut-influx-connector` via `apt`:
 
 ```shell
-sudo apt install nut_influx_connector
+sudo apt install nut-influx-connector
 ```
 
 ### macOS via Homebrew
