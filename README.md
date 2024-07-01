@@ -109,9 +109,6 @@ sudo journalctl -f -u nut-influx-connector.service
 
 ## Running on macOS with Launchd
 
-> **Note**
-> This is untested; please open an issue if it doesn't work as expected.
-
 After installing the binary via Homebrew, you can run it as a launchd service.
 - Install the launchd plist `com.dzombak.nut-influx-connector.plist` and customize that file as desired (e.g. with the correct CLI options for your deployment):
 ```shell
@@ -119,6 +116,10 @@ mkdir -p "$HOME"/Library/LaunchAgents
 curl -sSL https://raw.githubusercontent.com/cdzombak/nut_influx_connector/main/com.dzombak.nut-influx-connector.plist > "$HOME"/Library/LaunchAgents/com.dzombak.nut-influx-connector.plist
 nano "$HOME"/Library/LaunchAgents/com.dzombak.nut-influx-connector.plist
 ```
+
+## See Also
+
+- [macos-ups-influx-connector](https://github.com/cdzombak/macos-ups-influx-connector)
 
 ## License
 
