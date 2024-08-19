@@ -118,16 +118,6 @@ func main() {
 	doUpdate := func() {
 		atTime := time.Now()
 
-		load, err := readNutInt(*ups, "ups.load")
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
-		nominalPower, err := readNutInt(*ups, "ups.realpower.nominal")
-		if err != nil {
-			log.Println(err.Error())
-			return
-		}
 		battCharge, err := readNutInt(*ups, "battery.charge")
 		if err != nil {
 			log.Println(err.Error())
@@ -163,31 +153,98 @@ func main() {
 			log.Println(err.Error())
 			return
 		}
-		outputV, err := readNutFloat(*ups, "output.voltage")
+
+		load, err := readNutInt(*ups, "ups.load")
 		if err != nil {
 			log.Println(err.Error())
+			return
 		}
 
-		watts := math.Round(float64(nominalPower) * float64(load) / 100.0)
-		if *printUsage {
-			log.Printf("current approx. output for '%s': %.f watts\n", *ups, watts)
+		nominalPower, err := readNutInt(*ups, "ups.realpower.nominal")
+		if err != nil {
+			var err2 error
+			nominalPower, err2 = readNutInt(*ups, "ups.power.nominal")
+			if err2 != nil {
+				log.Println(err.Error())
+				log.Println(err2.Error())
+				return
+			}
+		}
+
+		var power float64
+		if power, err = readNutFloat(*ups, "ups.power"); err == nil {
+			if *printUsage {
+				log.Printf("current output for '%s': %.f watts\n", *ups, power)
+			}
+		} else {
+			power = math.Round(float64(nominalPower) * float64(load) / 100.0)
+			if *printUsage {
+				log.Printf("current approx. output for '%s': %.f watts\n", *ups, power)
+			}
+		}
+
+		fields := map[string]interface{}{
+			"watts":                      power, // backward compatibility
+			"power":                      power,
+			"power_nominal":              nominalPower,
+			"load_percent":               load,
+			"battery_charge_percent":     battCharge,
+			"battery_charge_low_percent": battChargeLow,
+			"battery_runtime_s":          battRuntime,
+			"battery_voltage":            battV,
+			"battery_voltage_nominal":    battVNominal,
+			"input_voltage":              inputV,
+			"input_voltage_nominal":      inputVNominal,
+		}
+
+		// optional properties follow:
+
+		if outputV, err := readNutFloat(*ups, "output.voltage"); err == nil {
+			fields["output_voltage"] = outputV
+		} else {
+			log.Println(err.Error())
+		}
+		if outputVNominal, err := readNutFloat(*ups, "output.voltage.nominal"); err == nil {
+			fields["output_voltage_nominal"] = outputVNominal
+		} else {
+			log.Println(err.Error())
+		}
+		if outputCurrent, err := readNutFloat(*ups, "output.current"); err == nil {
+			fields["output_current"] = outputCurrent
+		} else {
+			log.Println(err.Error())
+		}
+		if battChargeWarning, err := readNutInt(*ups, "battery.charge.warning"); err == nil {
+			fields["battery_charge_warning_percent"] = battChargeWarning
+		} else {
+			log.Println(err.Error())
+		}
+		if battTemp, err := readNutFloat(*ups, "battery.temperature"); err == nil {
+			fields["battery_temperature_c"] = battTemp
+			fields["battery_temperature_f"] = math.Round(battTemp*9.0/5.0 + 32.0)
+		} else {
+			log.Println(err.Error())
+		}
+		if inputFreq, err := readNutFloat(*ups, "input.frequency"); err == nil {
+			fields["input_frequency"] = inputFreq
+		} else {
+			log.Println(err.Error())
+		}
+		if outputFreq, err := readNutFloat(*ups, "output.frequency"); err == nil {
+			fields["output_frequency"] = outputFreq
+		} else {
+			log.Println(err.Error())
+		}
+		if outputFreqNominal, err := readNutFloat(*ups, "output.frequency.nominal"); err == nil {
+			fields["output_frequency_nominal"] = outputFreqNominal
+		} else {
+			log.Println(err.Error())
 		}
 
 		point := influxdb2.NewPoint(
 			*measurementName,
 			map[string]string{"ups_name": *upsNameTag}, // tags
-			map[string]interface{}{ // fields
-				"watts":                      watts,
-				"load_percent":               load,
-				"battery_charge_percent":     battCharge,
-				"battery_charge_low_percent": battChargeLow,
-				"battery_runtime_s":          battRuntime,
-				"battery_voltage":            battV,
-				"battery_voltage_nominal":    battVNominal,
-				"input_voltage":              inputV,
-				"input_voltage_nominal":      inputVNominal,
-				"output_voltage":             outputV,
-			},
+			fields,
 			atTime,
 		)
 		if err := retry.Do(
