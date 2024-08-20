@@ -4,16 +4,29 @@ Ship energy usage data and other UPS stats from Network-UPS-Tools to InfluxDB.
 
 The following fields are written to an InfluxDB measurement on a periodic basis:
 
-- `watts`
-- `load_percent`
-- `battery_charge_percent`
-- `battery_charge_low_percent`
-- `battery_runtime_s`
-- `battery_voltage`
-- `battery_voltage_nominal`
-- `input_voltage`
-- `input_voltage_nominal`
-- `output_voltage`
+- `battery_charge_low_percent`: "Low" battery charge percentage.
+- `battery_charge_percent`: Battery charge percentage.
+- `battery_runtime_s`: Battery runtime, in seconds.
+- `battery_voltage`: Battery voltage.
+- `battery_voltage_nominal`: Nominal battery voltage.
+- `input_voltage`: Input voltage.
+- `input_voltage_nominal`: Nominal input voltage.
+- `load_percent`: Load percentage of the UPS.
+- `power`: Current power output in watts.
+- `power_nominal`: Nominal (maximum) power output in watts.
+- `watts`: Current power output in watts (duplicates the value written to `power`, for backward compatibility).
+
+The following fields _may_ be written, if NUT supports them for your UPS:
+
+- `battery_charge_warning_percent`: "Warning" battery charge percentage.
+- `battery_temperature_c`: Battery temperature, in Celsius.
+- `battery_temperature_f`: Battery temperature, in Fahrenheit.
+- `input_frequency`: Input frequency.
+- `output_current`: Output current.
+- `output_frequency`: Output frequency.
+- `output_frequency_nominal`: Nominal output frequency.
+- `output_voltage`: Output voltage.
+- `output_voltage_nominal`: Nominal output voltage.
 
 ## Usage
 
