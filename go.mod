@@ -4,7 +4,7 @@ go 1.21.3
 
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/cdzombak/heartbeat v0.0.1
+	github.com/cdzombak/heartbeat v1.0.1
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 )
 
