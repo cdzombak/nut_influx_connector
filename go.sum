@@ -4,8 +4,8 @@ github.com/apapsch/go-jsonmerge/v2 v2.0.0/go.mod h1:lvDnEdqiQrp0O42VQGgmlKpxL1AP
 github.com/avast/retry-go v3.0.0+incompatible h1:4SOWQ7Qs+oroOTQOYnAHqelpCO0biHSxpiH9JdtuBj0=
 github.com/avast/retry-go v3.0.0+incompatible/go.mod h1:XtSnn+n/sHqQIpZ10K1qAevBhOOCWBLXXy3hyiqqBrY=
 github.com/bmatcuk/doublestar v1.1.1/go.mod h1:UD6OnuiIn0yFxxA2le/rnRU1G4RaI4UvFv1sNto9p6w=
-github.com/cdzombak/heartbeat v1.0.1 h1:RfzjA90R8Uy2SUZqG+ey+6iU5nu9ix0X9AAEVDHA/HY=
-github.com/cdzombak/heartbeat v1.0.1/go.mod h1:pK5GKvyesTKeHFpI4PeJSElTO0m0TqjG/r9PG81yyGA=
+github.com/cdzombak/heartbeat v1.1.1 h1:0GsQQdZn7JtwOPaheZwuOYmN3P+QOj44IyMAE8oEPjg=
+github.com/cdzombak/heartbeat v1.1.1/go.mod h1:pK5GKvyesTKeHFpI4PeJSElTO0m0TqjG/r9PG81yyGA=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
