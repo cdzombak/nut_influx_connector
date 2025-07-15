@@ -1,6 +1,7 @@
 module nut_influx_connector
 
 go 1.21.3
+toolchain go1.23.7
 
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
@@ -13,5 +14,5 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
-	golang.org/x/net v0.34.0 // indirect
+	golang.org/x/net v0.36.0 // indirect
 )
