@@ -318,7 +318,16 @@ func main() {
 			}
 		}
 
-		if hb != nil && (influxSuccess || mqttSuccess) {
+		heartbeatSuccess := false
+		if influxConfigured && mqttConfigured {
+			heartbeatSuccess = influxSuccess && mqttSuccess
+		} else if influxConfigured {
+			heartbeatSuccess = influxSuccess
+		} else if mqttConfigured {
+			heartbeatSuccess = mqttSuccess
+		}
+
+		if hb != nil && heartbeatSuccess {
 			hb.Alive(atTime)
 		}
 	}
