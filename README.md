@@ -30,7 +30,9 @@ The following fields _may_ be written, if NUT supports them for your UPS:
 
 ## Usage
 
-The following syntax will run `openweather-influxdb-connector`, and the program will keep running until it's killed.
+The following syntax will run `nut_influx_connector`, and the program will keep running until it's killed.
+
+### InfluxDB Output Example
 
 ```text
 nut_influx_connector \
@@ -41,21 +43,50 @@ nut_influx_connector \
     [OPTIONS ...]
 ```
 
+### MQTT Output Example
+
+```text
+nut_influx_connector \
+    -mqtt-server tcp://192.168.1.1:1883 \
+    -mqtt-topic "home/UPS" \
+    -mqtt-username "mqtt_user" \
+    -mqtt-password "mqtt_pass" \
+    -ups deskups \
+    -ups-nametag "work_desk" \
+    [OPTIONS ...]
+```
+
+This will publish measurements to topics like `home/UPS/battery_charge_percent`, `home/UPS/power`, etc.
+
 ## Options
 
-* `-heartbeat-url string`: URL to GET every 60s, URL to GET every 60s, if and only if the program has successfully sent NUT statistics to Influx in the past 120s.
-- `-influx-bucket string`: InfluxDB bucket. Supply a string in the form `database/retention-policy`. For the default retention policy, pass just a database name (without the slash character). Required.
-- `-influx-password string`: InfluxDB password.
-- `-influx-server string`: InfluxDB server, including protocol and port, e.g. `http://192.168.1.4:8086`. Required.
-- `-influx-timeout int`: Timeout for writing to InfluxDB, in seconds. (default `3`)
-- `-influx-username string`: InfluxDB username.
-- `-measurement-name string`: InfluxDB measurement name. (default `ups_stats`)
-- `-poll-interval int`: Polling interval, in seconds. (default `30`)
-- `-print-usage`: Log energy usage (in watts) to standard error.
+### General Options
+
 - `-ups string`: UPS to read status from, format `upsname[@hostname[:port]]`. Required.
 - `-ups-nametag string`: Value for the `ups_name` tag in InfluxDB. Required.
+- `-poll-interval int`: Polling interval, in seconds. (default `30`)
+- `-print-usage`: Log energy usage (in watts) to standard error.
+- `-heartbeat-url string`: URL to GET every 60s, if and only if the program has successfully sent NUT statistics to output in the past 120s.
 - `-help`: Print help and exit.
 - `-version`: Print version and exit.
+
+### InfluxDB Options
+
+- `-influx-server string`: InfluxDB server, including protocol and port, e.g. `http://192.168.1.4:8086`.
+- `-influx-bucket string`: InfluxDB bucket. Supply a string in the form `database/retention-policy`. For the default retention policy, pass just a database name (without the slash character).
+- `-influx-username string`: InfluxDB username.
+- `-influx-password string`: InfluxDB password.
+- `-influx-timeout int`: Timeout for writing to InfluxDB, in seconds. (default `3`)
+- `-measurement-name string`: InfluxDB measurement name. (default `ups_stats`)
+
+### MQTT Options
+
+- `-mqtt-server string`: MQTT broker server, including protocol and port, e.g. `tcp://192.168.1.1:1883`.
+- `-mqtt-topic string`: MQTT base topic for publishing measurements.
+- `-mqtt-username string`: MQTT username.
+- `-mqtt-password string`: MQTT password.
+
+**Note:** At least one output method (InfluxDB or MQTT) must be configured.
 
 ## Installation
 
@@ -129,6 +160,39 @@ mkdir -p "$HOME"/Library/LaunchAgents
 curl -sSL https://raw.githubusercontent.com/cdzombak/nut_influx_connector/main/com.dzombak.nut-influx-connector.plist > "$HOME"/Library/LaunchAgents/com.dzombak.nut-influx-connector.plist
 nano "$HOME"/Library/LaunchAgents/com.dzombak.nut-influx-connector.plist
 ```
+
+## Home Assistant Integration
+
+When using MQTT output, you can integrate the UPS data with Home Assistant using MQTT sensors. Add the following to your Home Assistant configuration:
+
+```yaml
+mqtt:
+  sensor:
+    - name: "UPS Battery Charge"
+      state_topic: "home/UPS/battery_charge_percent"
+      unit_of_measurement: "%"
+      device_class: "battery"
+      
+    - name: "UPS Power Output"
+      state_topic: "home/UPS/power"
+      unit_of_measurement: "W"
+      device_class: "power"
+      
+    - name: "UPS Load"
+      state_topic: "home/UPS/load_percent"
+      unit_of_measurement: "%"
+      
+    - name: "UPS Input Voltage"
+      state_topic: "home/UPS/input_voltage"
+      unit_of_measurement: "V"
+      device_class: "voltage"
+      
+    - name: "UPS Battery Runtime"
+      state_topic: "home/UPS/battery_runtime_s"
+      unit_of_measurement: "s"
+```
+
+Replace `home/UPS` with your configured MQTT topic.
 
 ## See Also
 

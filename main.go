@@ -14,7 +14,9 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/cdzombak/heartbeat"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/influxdata/influxdb-client-go/v2"
+	"github.com/influxdata/influxdb-client-go/v2/api"
 )
 
 var version = "<dev>"
@@ -59,6 +61,10 @@ func main() {
 	var influxPass = flag.String("influx-password", "", "InfluxDB password.")
 	var influxBucket = flag.String("influx-bucket", "", "InfluxDB bucket. Supply a string in the form 'database/retention-policy'. For the default retention policy, pass just a database name (without the slash character). Required.")
 	var measurementName = flag.String("measurement-name", "ups_stats", "InfluxDB measurement name.")
+	var mqttServer = flag.String("mqtt-server", "", "MQTT broker server, including protocol and port, eg. 'tcp://192.168.1.1:1883'.")
+	var mqttUsername = flag.String("mqtt-username", "", "MQTT username.")
+	var mqttPassword = flag.String("mqtt-password", "", "MQTT password.")
+	var mqttTopic = flag.String("mqtt-topic", "", "MQTT base topic for publishing measurements.")
 	var upsNameTag = flag.String("ups-nametag", "", "Value for the ups_name tag in InfluxDB. Required.")
 	var ups = flag.String("ups", "", "UPS to read status from, format 'upsname[@hostname[:port]]'. Required.")
 	var pollInterval = flag.Int("poll-interval", 30, "Polling interval, in seconds.")
@@ -73,10 +79,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	if *influxServer == "" || *influxBucket == "" {
-		fmt.Println("-influx-bucket and -influx-server must be supplied.")
+	influxConfigured := *influxServer != "" && *influxBucket != ""
+	mqttConfigured := *mqttServer != "" && *mqttTopic != ""
+
+	if !influxConfigured && !mqttConfigured {
+		fmt.Println("At least one output method must be configured: either InfluxDB (-influx-server and -influx-bucket) or MQTT (-mqtt-server and -mqtt-topic).")
 		os.Exit(1)
 	}
+
 	if *upsNameTag == "" || *ups == "" {
 		fmt.Println("-ups and -ups-nametag must be supplied.")
 		os.Exit(1)
@@ -98,22 +108,46 @@ func main() {
 		}
 	}
 
-	influxTimeout := time.Duration(*influxTimeoutS) * time.Second
-	authString := ""
-	if *influxUser != "" || *influxPass != "" {
-		authString = fmt.Sprintf("%s:%s", *influxUser, *influxPass)
+	var influxWriteAPI api.WriteAPIBlocking
+	var influxTimeout time.Duration
+	if influxConfigured {
+		influxTimeout = time.Duration(*influxTimeoutS) * time.Second
+		authString := ""
+		if *influxUser != "" || *influxPass != "" {
+			authString = fmt.Sprintf("%s:%s", *influxUser, *influxPass)
+		}
+		influxClient := influxdb2.NewClient(*influxServer, authString)
+		ctx, cancel := context.WithTimeout(context.Background(), influxTimeout)
+		defer cancel()
+		health, err := influxClient.Health(ctx)
+		if err != nil {
+			log.Fatalf("failed to check InfluxDB health: %v", err)
+		}
+		if health.Status != "pass" {
+			log.Fatalf("InfluxDB did not pass health check: status %s; message '%s'", health.Status, *health.Message)
+		}
+		influxWriteAPI = influxClient.WriteAPIBlocking("", *influxBucket)
 	}
-	influxClient := influxdb2.NewClient(*influxServer, authString)
-	ctx, cancel := context.WithTimeout(context.Background(), influxTimeout)
-	defer cancel()
-	health, err := influxClient.Health(ctx)
-	if err != nil {
-		log.Fatalf("failed to check InfluxDB health: %v", err)
+
+	var mqttClient mqtt.Client
+	if mqttConfigured {
+		opts := mqtt.NewClientOptions()
+		opts.AddBroker(*mqttServer)
+		opts.SetClientID(fmt.Sprintf("nut_influx_connector_%d", time.Now().Unix()))
+		if *mqttUsername != "" {
+			opts.SetUsername(*mqttUsername)
+		}
+		if *mqttPassword != "" {
+			opts.SetPassword(*mqttPassword)
+		}
+		opts.SetAutoReconnect(true)
+		opts.SetConnectRetry(true)
+
+		mqttClient = mqtt.NewClient(opts)
+		if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
+			log.Fatalf("failed to connect to MQTT broker: %v", token.Error())
+		}
 	}
-	if health.Status != "pass" {
-		log.Fatalf("InfluxDB did not pass health check: status %s; message '%s'", health.Status, *health.Message)
-	}
-	influxWriteAPI := influxClient.WriteAPIBlocking("", *influxBucket)
 
 	doUpdate := func() {
 		atTime := time.Now()
@@ -241,22 +275,50 @@ func main() {
 			log.Println(err.Error())
 		}
 
-		point := influxdb2.NewPoint(
-			*measurementName,
-			map[string]string{"ups_name": *upsNameTag}, // tags
-			fields,
-			atTime,
-		)
-		if err := retry.Do(
-			func() error {
-				ctx, cancel := context.WithTimeout(context.Background(), influxTimeout)
-				defer cancel()
-				return influxWriteAPI.WritePoint(ctx, point)
-			},
-			retry.Attempts(2),
-		); err != nil {
-			log.Printf("failed to write point to influx: %v", err)
-		} else if hb != nil {
+		var influxSuccess bool
+		if influxWriteAPI != nil {
+			point := influxdb2.NewPoint(
+				*measurementName,
+				map[string]string{"ups_name": *upsNameTag}, // tags
+				fields,
+				atTime,
+			)
+			if err := retry.Do(
+				func() error {
+					ctx, cancel := context.WithTimeout(context.Background(), influxTimeout)
+					defer cancel()
+					return influxWriteAPI.WritePoint(ctx, point)
+				},
+				retry.Attempts(2),
+			); err != nil {
+				log.Printf("failed to write point to influx: %v", err)
+			} else {
+				influxSuccess = true
+			}
+		}
+
+		var mqttSuccess bool
+		if mqttClient != nil && mqttClient.IsConnected() {
+			mqttSuccess = true
+			for fieldName, fieldValue := range fields {
+				topic := fmt.Sprintf("%s/%s", *mqttTopic, fieldName)
+				payload := fmt.Sprintf("%v", fieldValue)
+
+				if err := retry.Do(
+					func() error {
+						token := mqttClient.Publish(topic, 0, false, payload)
+						token.Wait()
+						return token.Error()
+					},
+					retry.Attempts(2),
+				); err != nil {
+					log.Printf("failed to publish %s to MQTT: %v", fieldName, err)
+					mqttSuccess = false
+				}
+			}
+		}
+
+		if hb != nil && (influxSuccess || mqttSuccess) {
 			hb.Alive(atTime)
 		}
 	}
