@@ -133,6 +133,13 @@ func main() {
 	var mqttClient mqtt.Client
 	var mqttTimeout time.Duration
 	if mqttConfigured {
+		if !strings.Contains(*mqttServer, "://") {
+			*mqttServer = "tcp://" + *mqttServer
+		}
+		if !strings.Contains(*mqttServer, ":") || strings.LastIndex(*mqttServer, ":") <= strings.Index(*mqttServer, "://") + 2 {
+			*mqttServer = *mqttServer + ":1883"
+		}
+
 		opts := mqtt.NewClientOptions()
 		opts.AddBroker(*mqttServer)
 		opts.SetClientID(fmt.Sprintf("nut_influx_connector_%d", time.Now().Unix()))
@@ -144,7 +151,7 @@ func main() {
 		}
 		opts.SetAutoReconnect(true)
 		opts.SetConnectRetry(true)
-		
+
 		mqttTimeout = time.Duration(*mqttTimeoutS) * time.Second
 		opts.SetConnectTimeout(mqttTimeout)
 		opts.SetPingTimeout(mqttTimeout)
