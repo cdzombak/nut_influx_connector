@@ -65,6 +65,7 @@ func main() {
 	var mqttUsername = flag.String("mqtt-username", "", "MQTT username.")
 	var mqttPassword = flag.String("mqtt-password", "", "MQTT password.")
 	var mqttTopic = flag.String("mqtt-topic", "", "MQTT base topic for publishing measurements.")
+	var mqttTimeoutS = flag.Int("mqtt-timeout", 3, "Timeout MQTT operations, in seconds.")
 	var upsNameTag = flag.String("ups-nametag", "", "Value for the ups_name tag in InfluxDB. Required.")
 	var ups = flag.String("ups", "", "UPS to read status from, format 'upsname[@hostname[:port]]'. Required.")
 	var pollInterval = flag.Int("poll-interval", 30, "Polling interval, in seconds.")
@@ -130,6 +131,7 @@ func main() {
 	}
 
 	var mqttClient mqtt.Client
+	var mqttTimeout time.Duration
 	if mqttConfigured {
 		opts := mqtt.NewClientOptions()
 		opts.AddBroker(*mqttServer)
@@ -142,9 +144,14 @@ func main() {
 		}
 		opts.SetAutoReconnect(true)
 		opts.SetConnectRetry(true)
+		
+		mqttTimeout = time.Duration(*mqttTimeoutS) * time.Second
+		opts.SetConnectTimeout(mqttTimeout)
+		opts.SetPingTimeout(mqttTimeout)
+		opts.SetWriteTimeout(mqttTimeout)
 
 		mqttClient = mqtt.NewClient(opts)
-		if token := mqttClient.Connect(); token.Wait() && token.Error() != nil {
+		if token := mqttClient.Connect(); token.WaitTimeout(mqttTimeout) && token.Error() != nil {
 			log.Fatalf("failed to connect to MQTT broker: %v", token.Error())
 		}
 	}
