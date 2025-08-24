@@ -82,6 +82,7 @@ This will publish measurements to topics like `home/UPS/battery_charge_percent`,
 ### MQTT Options
 
 - `-mqtt-server string`: MQTT broker server, including protocol and port, e.g. `tcp://192.168.1.1:1883`.
+- `-mqtt-timeout int`: Timeout for MQTT operations, in seconds. (default `3`)
 - `-mqtt-topic string`: MQTT base topic for publishing measurements.
 - `-mqtt-username string`: MQTT username.
 - `-mqtt-password string`: MQTT password.
