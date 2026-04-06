@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/cdzombak/heartbeat v1.1.1
+	github.com/cdzombak/heartbeat v1.1.2
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
 )
